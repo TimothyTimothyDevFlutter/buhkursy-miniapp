@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Прототип — версия 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --forest:#1F3326;
+  --moss:#567F52;
+  --pist:#CFE3A8;
+  --pist-2:#E9F1D8;
+  --pist-3:#F3F7EA;
+  --cream:#FAFBF5;
+  --ink:#1B2A1D;
+  --muted:#77876F;
+  --line:#E4EDD8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Golos Text',system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:#C9D8BB;color:var(--ink);line-height:1.55;
+  display:flex;justify-content:center;
+}
+h1,h2,h3{font-family:'Nunito',system-ui,sans-serif}
+a{color:inherit}
+.app{width:100%;max-width:430px;background:var(--cream);min-height:100vh;position:relative;overflow:hidden}
+@media(min-width:700px){
+  body{padding:22px 0}
+  .app{border-radius:28px;box-shadow:0 20px 50px rgba(31,51,38,.24);min-height:auto}
+}
+
+/* ——— приветствие ——— */
+.hero{background:var(--forest);color:var(--cream);padding:24px 22px 0;position:relative;overflow:hidden}
+.hero::after{
+  content:"";position:absolute;right:-80px;top:-80px;width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle,rgba(207,227,168,.15),transparent 68%);
+}
+.logo{display:flex;align-items:center;gap:9px;position:relative;z-index:1}
+.logo .m{
+  width:28px;height:28px;border-radius:9px;background:var(--pist);color:var(--forest);
+  display:grid;place-items:center;font-family:'Nunito',sans-serif;font-weight:900;font-size:13px;
+}
+.logo b{font-family:'Nunito',sans-serif;font-weight:800;font-size:14.5px;color:var(--pist)}
+.hero h1{
+  font-weight:900;font-size:31px;line-height:1.16;letter-spacing:-.03em;
+  margin:24px 0 12px;position:relative;z-index:1;
+}
+.hero h1 span{display:block;font-weight:700;color:var(--pist)}
+.hero .lede{font-size:14.5px;color:#B9CDAE;max-width:32ch;margin-bottom:24px;position:relative;z-index:1}
+.strip{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  background:var(--cream);border-radius:16px 16px 0 0;overflow:hidden;position:relative;z-index:1;
+}
+.strip div{padding:14px 12px 16px;border-right:1px solid var(--line);text-align:center}
+.strip div:last-child{border-right:0}
+.strip b{
+  display:block;font-family:'Nunito',sans-serif;font-weight:900;font-size:20px;
+  color:var(--forest);letter-spacing:-.02em;
+}
+.strip span{display:block;font-size:11px;color:var(--muted);line-height:1.3;margin-top:2px}
+
+/* ——— секции ——— */
+section{padding:28px 22px 4px}
+.label{
+  display:inline-block;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--moss);border-bottom:2px solid var(--pist);padding-bottom:3px;margin-bottom:11px;
+}
+h2{font-weight:900;font-size:23px;letter-spacing:-.025em;line-height:1.2;margin-bottom:7px}
+.desc{font-size:14px;color:var(--muted);margin-bottom:18px}
+
+/* ——— ведомость ——— */
+.sheet{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}
+.sheet-head{
+  display:flex;justify-content:space-between;background:var(--forest);color:var(--pist);
+  font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:10px 15px;
+}
+.row{
+  display:grid;grid-template-columns:1fr auto 20px;gap:11px;align-items:center;
+  padding:15px;border-top:1px solid var(--line);background:#fff;
+  cursor:pointer;width:100%;text-align:left;border-left:0;border-right:0;border-bottom:0;
+  font-family:'Golos Text',sans-serif;
+}
+.row:first-of-type{border-top:0}
+.row .t{font-family:'Nunito',sans-serif;font-weight:800;font-size:15.5px;letter-spacing:-.015em;color:var(--ink)}
+.row .s{font-size:12px;color:var(--muted);margin-top:2px}
+.row .n{
+  font-variant-numeric:tabular-nums;font-family:'Nunito',sans-serif;font-weight:900;
+  font-size:15px;color:var(--forest);text-align:right;
+}
+.row .n small{display:block;font-size:9.5px;color:var(--muted);font-weight:700;letter-spacing:.04em}
+.row .pl{
+  width:20px;height:20px;border-radius:50%;background:var(--pist-2);color:var(--forest);
+  display:grid;place-items:center;font-size:13px;transition:transform .22s ease;
+}
+.row.open .pl{transform:rotate(45deg);background:var(--forest);color:var(--pist)}
+.row:focus-visible{outline:2px solid var(--moss);outline-offset:-2px}
+.body{max-height:0;overflow:hidden;transition:max-height .3s ease;background:var(--pist-3)}
+.body.open{max-height:460px}
+.body .in{padding:15px 15px 18px}
+.body p{font-size:13.5px;color:var(--muted);margin-bottom:11px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{font-size:11px;font-weight:600;background:#fff;border:1px solid var(--line);color:var(--moss);padding:5px 10px;border-radius:20px}
+.body ul{list-style:none}
+.body li{font-size:13.5px;padding:7px 0 7px 19px;position:relative;border-top:1px dashed var(--line)}
+.body li::before{
+  content:"";position:absolute;left:1px;top:14px;width:8px;height:8px;border-radius:3px;background:var(--pist);
+}
+
+/* ——— расписание ——— */
+.hours{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+.hours div{
+  background:var(--pist-2);border-radius:12px;padding:9px 12px;
+  font-size:12.5px;font-weight:600;color:var(--forest);
+}
+.hours div span{display:block;font-size:11px;color:var(--moss);font-weight:400}
+.slot{display:flex;align-items:center;gap:13px;padding:14px 15px;border-top:1px solid var(--line)}
+.slot:first-of-type{border-top:0}
+.slot .bar{width:3px;align-self:stretch;border-radius:3px;background:var(--pist)}
+.slot.off .bar{background:var(--line)}
+.slot .tm{
+  width:50px;flex-shrink:0;font-variant-numeric:tabular-nums;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:13.5px;color:var(--forest);
+}
+.slot .tx{flex:1;font-size:14px;font-weight:600}
+.slot .tx span{display:block;font-size:12px;color:var(--muted);font-weight:400}
+.tag{font-size:10.5px;font-weight:700;padding:5px 10px;border-radius:20px;white-space:nowrap;background:var(--pist);color:var(--forest)}
+.tag.no{background:#EFF0EB;color:#9AA495}
+
+/* заметка об опоздании */
+.note-card{
+  display:flex;align-items:center;gap:12px;margin-top:12px;
+  background:var(--pist-2);border-radius:14px;padding:13px 15px;
+}
+.note-card .ic{
+  width:30px;height:30px;flex-shrink:0;border-radius:10px;background:var(--forest);color:var(--pist);
+  display:grid;place-items:center;font-family:'Nunito',sans-serif;font-weight:900;font-size:13px;
+}
+.note-card b{display:block;font-family:'Nunito',sans-serif;font-weight:800;font-size:13.5px;color:var(--forest)}
+.note-card span{font-size:12.5px;color:var(--moss)}
+
+/* ——— стоимость ——— */
+.price-main{background:var(--forest);border-radius:22px;padding:22px;color:#fff}
+.price-main .cl{font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:#93AC8B;font-weight:700}
+.price-main .amount{
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:40px;letter-spacing:-.04em;
+  color:var(--pist);line-height:1.05;margin:9px 0 4px;font-variant-numeric:tabular-nums;
+}
+.price-main .amount i{font-style:normal;font-size:15px;font-weight:700;color:#B9CDAE}
+.price-main .note{font-size:13px;color:#B9CDAE}
+.prow{
+  display:flex;justify-content:space-between;align-items:center;
+  background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;margin-top:10px;
+}
+.prow b{font-family:'Nunito',sans-serif;font-weight:800;font-size:15px}
+.prow small{display:block;font-size:12px;color:var(--muted);font-weight:400;font-family:'Golos Text',sans-serif;margin-top:2px}
+.prow .v{
+  font-family:'Nunito',sans-serif;font-weight:900;font-size:16px;color:var(--forest);
+  text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;
+}
+.prow .v span{display:block;font-size:11px;color:var(--muted);font-weight:700}
+
+/* ——— контакты ——— */
+.contacts{background:var(--pist-2);padding:28px 22px 30px;margin-top:28px}
+.contacts h2{margin-bottom:7px}
+.contacts .desc{margin-bottom:16px}
+.person{background:#fff;border-radius:16px;padding:15px;margin-bottom:10px}
+.person .who{display:flex;align-items:center;gap:11px;margin-bottom:11px}
+.person .av{
+  width:36px;height:36px;border-radius:12px;background:var(--pist);color:var(--forest);
+  display:grid;place-items:center;font-family:'Nunito',sans-serif;font-weight:900;font-size:14px;flex-shrink:0;
+}
+.person .who b{font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;display:block}
+.person .who span{font-size:12px;color:var(--muted)}
+.tel{
+  display:flex;justify-content:space-between;align-items:center;text-decoration:none;
+  padding:10px 0;border-top:1px solid var(--line);
+  font-variant-numeric:tabular-nums;font-weight:600;font-size:15px;color:var(--forest);
+}
+.tel:last-child{padding-bottom:0}
+.tel em{font-style:normal;font-size:11.5px;font-weight:700;color:var(--moss);letter-spacing:.04em;text-transform:uppercase}
+footer{padding:16px 22px 100px;text-align:center;font-size:11.5px;color:var(--muted)}
+
+/* ——— липкая кнопка ——— */
+.bar{
+  position:sticky;bottom:0;padding:12px 22px 18px;
+  background:linear-gradient(to top,var(--cream) 58%,rgba(250,251,245,0));
+}
+.cta{
+  display:block;width:100%;border:0;cursor:pointer;text-decoration:none;
+  background:var(--forest);color:var(--pist);
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:15.5px;
+  padding:16px;border-radius:15px;text-align:center;
+  box-shadow:0 8px 22px rgba(31,51,38,.26);transition:transform .15s ease;
+}
+.cta:active{transform:scale(.985)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="hero">
+    <div class="logo"><span class="m">Σ</span><b>Счёт и Порядок</b></div>
+    <h1>Разберётесь в цифрах<span>за одну весну.</span></h1>
+    <p class="lede">Курсы бухгалтерии для новичков и для тех, кто устал бояться отчётности.</p>
+    <div class="strip">
+      <div><b>2</b><span>курса<br>на выбор</span></div>
+      <div><b>90 мин</b><span>одно<br>занятие</span></div>
+      <div><b>6</b><span>человек<br>в группе</span></div>
+    </div>
+  </header>
+
+  <!-- КУРСЫ -->
+  <section>
+    <span class="label">Программы</span>
+    <h2>Что можно изучать</h2>
+    <p class="desc">Курсы идут параллельно — начать можно с любого. Нажмите на строку, чтобы раскрыть программу.</p>
+
+    <div class="sheet">
+      <div class="sheet-head"><span>Курс</span><span>Занятий</span></div>
+
+      <button class="row" data-acc><span><span class="t">Бухгалтер с нуля</span><span class="s">для смены профессии</span></span><span class="n">36<small>занятий</small></span><span class="pl">+</span></button>
+      <div class="body"><div class="in">
+        <p>Полный путь: от первого документа до сданного отчёта. Подойдёт, если вы никогда не работали с бухгалтерией.</p>
+        <div class="chips"><span class="chip">с нуля</span><span class="chip">много практики</span></div>
+        <ul><li>Первичные документы и счета</li><li>Двойная запись: дебет и кредит</li><li>Учёт кассы и банка</li><li>Итоговая практика на реальных кейсах</li></ul>
+      </div></div>
+
+      <button class="row" data-acc><span><span class="t">1С: Бухгалтерия 8.3</span><span class="s">практика в программе</span></span><span class="n">18<small>занятий</small></span><span class="pl">+</span></button>
+      <div class="body"><div class="in">
+        <p>Каждое занятие проходит за компьютером, внутри самой программы. Без пересказа справки.</p>
+        <div class="chips"><span class="chip">за компьютером</span><span class="chip">по документам</span></div>
+        <ul><li>Настройка организации с нуля</li><li>Поступление, продажа, оплата</li><li>Закрытие месяца</li><li>Формирование отчётов</li></ul>
+      </div></div>
+    </div>
+  </section>
+
+  <!-- РАСПИСАНИЕ -->
+  <section>
+    <span class="label">Расписание</span>
+    <h2>Как идёт день</h2>
+    <p class="desc">Три группы каждый будний день, между ними — время на консультации.</p>
+
+    <div class="hours">
+      <div>Пн — Пт <span>09:00 — 20:00</span></div>
+      <div>Суббота <span>10:00 — 16:00</span></div>
+      <div>Вс <span>выходной</span></div>
+    </div>
+
+    <div class="sheet">
+      <div class="slot"><span class="bar"></span><span class="tm">09:30</span><span class="tx">Утренняя группа<span>Бухгалтер с нуля</span></span><span class="tag">2 места</span></div>
+      <div class="slot"><span class="bar"></span><span class="tm">11:15</span><span class="tx">Консультации<span>Бесплатно, по телефону</span></span><span class="tag">открыто</span></div>
+      <div class="slot off"><span class="bar"></span><span class="tm">13:00</span><span class="tx">Дневная группа<span>1С: Бухгалтерия 8.3</span></span><span class="tag no">мест нет</span></div>
+      <div class="slot"><span class="bar"></span><span class="tm">15:00</span><span class="tx">Индивидуально<span>Один на один</span></span><span class="tag">3 слота</span></div>
+      <div class="slot"><span class="bar"></span><span class="tm">18:30</span><span class="tx">Вечерняя группа<span>1С: Бухгалтерия 8.3</span></span><span class="tag">4 места</span></div>
+    </div>
+
+    <div class="note-card">
+      <span class="ic">10</span>
+      <span><b>Опоздание</b><span>До 10 минут мы вас ждём.</span></span>
+    </div>
+  </section>
+
+  <!-- СТОИМОСТЬ -->
+  <section>
+    <span class="label">Стоимость</span>
+    <h2>Сколько стоит занятие</h2>
+    <p class="desc">Одна цена, без абонементов и скрытых условий.</p>
+
+    <div class="price-main">
+      <div class="cl">Занятие в группе</div>
+      <div class="amount">100 000 <i>сум</i></div>
+      <div class="note">90 минут · группа до 6 человек</div>
+    </div>
+
+    <div class="prow">
+      <div><b>Индивидуально</b><small>один на один с преподавателем</small></div>
+      <div class="v">300 000<span>сум</span></div>
+    </div>
+  </section>
+
+  <!-- КОНТАКТЫ -->
+  <div class="contacts">
+    <h2>Контакты</h2>
+    <p class="desc">Позвоните — расскажем о курсе и запишем в группу.</p>
+
+    <div class="person">
+      <div class="who"><span class="av">Э</span><span><b>Элина</b><span>запись на курсы</span></span></div>
+      <a class="tel" href="tel:+998913541128">+998 91 354-11-28 <em>позвонить</em></a>
+    </div>
+
+    <div class="person">
+      <div class="who"><span class="av">З</span><span><b>Зохиджон Сайдуллаев</b><span>вопросы по обучению</span></span></div>
+      <a class="tel" href="tel:+998972590085">+998 97 259-00-85 <em>позвонить</em></a>
+      <a class="tel" href="tel:+998972530085">+998 97 253-00-85 <em>позвонить</em></a>
+    </div>
+  </div>
+
+  <footer>Прототип · версия 2</footer>
+
+  <div class="bar">
+    <a class="cta" href="tel:+998913541128">Позвонить и записаться</a>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('[data-acc]').forEach(function(h){
+  h.addEventListener('click',function(){
+    var b=h.nextElementSibling, open=b.classList.contains('open');
+    document.querySelectorAll('.body.open').forEach(function(x){
+      x.classList.remove('open'); x.previousElementSibling.classList.remove('open');
+    });
+    if(!open){b.classList.add('open');h.classList.add('open')}
+  });
+});
+</script>
+</body>
+</html>
