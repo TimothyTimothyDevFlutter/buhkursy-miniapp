@@ -353,3 +353,13 @@ footer{padding-bottom:calc(155px + env(safe-area-inset-bottom,0px))}
 
 /* Подпись автора внизу страницы */
 footer a{color:var(--moss);text-decoration:none;font-weight:600}
+
+/* Подсказка про заявку в блоке контактов */
+.hint{
+  font-size:14px;color:var(--muted);margin:-10px 0 16px;
+}
+.golink{
+  border:0;background:none;padding:0;cursor:pointer;
+  font-family:'Golos Text',system-ui,sans-serif;font-size:14px;font-weight:700;
+  color:var(--moss);text-decoration:underline;text-underline-offset:3px;
+}

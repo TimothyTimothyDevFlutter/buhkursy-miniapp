@@ -255,9 +255,17 @@ function renderContacts() {
            '</div>';
   }).join('');
 
+  // Подсказка про заявку — только если форма включена.
+  // Ссылка прокручивает к ней, чтобы не искать глазами.
+  var hint = DATA.settings.formUrl
+    ? '<p class="hint">' + esc(d.formHint) +
+      ' <button class="golink" type="button" data-goform>' + esc(d.formLink) + '</button></p>'
+    : '';
+
   block('contacts').innerHTML =
     '<h2>' + esc(d.title) + '</h2>' +
     '<p class="desc">' + esc(d.desc) + '</p>' +
+    hint +
     people;
 }
 
@@ -443,24 +451,26 @@ function renderCta() {
     (showSignup ? '<button class="cta second" type="button" data-signup>' + esc(a.signup) + '</button>' : '');
 }
 
-// Кнопка «Записаться» прокручивает к форме и ставит курсор в первое поле
-function setupSignupButton() {
-  var button = block('cta').querySelector('[data-signup]');
-  if (!button) return;
+// Прокручивает к форме и ставит курсор в первое поле.
+// Одно и то же нужно кнопке внизу и ссылке в контактах.
+function goToForm() {
+  haptic('medium');
+  var host = block('form');
+  if (!host || host.hidden) return;
 
-  button.addEventListener('click', function () {
-    haptic('medium');
-    var host = block('form');
-    if (host.hidden) return;
+  host.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    host.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  var first = host.querySelector('input[name="name"]');
+  if (first) {
+    // Ждём конца прокрутки: если поставить курсор сразу,
+    // телефон откроет клавиатуру и прокрутка собьётся
+    setTimeout(function () { first.focus({ preventScroll: true }); }, 450);
+  }
+}
 
-    var first = host.querySelector('input[name="name"]');
-    if (first) {
-      // Ждём конца прокрутки: если поставить курсор сразу,
-      // телефон откроет клавиатуру и прокрутка собьётся
-      setTimeout(function () { first.focus({ preventScroll: true }); }, 450);
-    }
+function setupFormLinks() {
+  document.querySelectorAll('[data-signup], [data-goform]').forEach(function (el) {
+    el.addEventListener('click', goToForm);
   });
 }
 
@@ -581,7 +591,7 @@ function renderAll() {
   setupLangSwitch();
   setupAccordion();
   setupForm();
-  setupSignupButton();
+  setupFormLinks();
   setupFooterLink();
   setupHaptics();
 }

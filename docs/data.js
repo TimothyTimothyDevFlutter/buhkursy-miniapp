@@ -193,6 +193,12 @@ const DATA = {
     contacts: {
       title: 'Контакты',
       desc: 'Позвоните — расскажем о курсе и запишем в группу.',
+
+      // Строка под описанием: подсказка тем, кто не готов звонить.
+      // Показывается только если форма заявки включена.
+      formHint: 'Можно и без звонка —',
+      formLink: 'оставьте заявку',
+
       callWord: 'позвонить',         // мелкая подпись справа от номера
       // Порядок должен совпадать с shared.phones
       people: [
@@ -325,6 +331,10 @@ const DATA = {
     contacts: {
       title: 'Aloqa',
       desc: 'Qoʼngʼiroq qiling — kurs haqida aytamiz va guruhga yozamiz.',
+
+      formHint: 'Qoʼngʼiroqsiz ham mumkin —',
+      formLink: 'ariza qoldiring',
+
       callWord: 'qoʼngʼiroq',
       people: [
         { name: 'Elina',              role: 'kurslarga yozilish' },
