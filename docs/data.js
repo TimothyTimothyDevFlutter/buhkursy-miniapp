@@ -11,16 +11,16 @@
    Он делится на три части:
 
    1. settings — технические настройки. Трогать почти не нужно.
-   2. shared   — то, что одинаково на обоих языках: цены и телефоны.
+   2. shared   — то, что одинаково на всех языках: цены и телефоны.
                  Меняете цену один раз — меняется везде.
-   3. ru / uz  — все слова. Русский блок и узбекский блок устроены
-                 совершенно одинаково, строка в строку.
+   3. ru / uz / en — все слова. Три блока устроены совершенно
+                 одинаково, строка в строку.
 
    ----------------------------------------------------------------
-   ГЛАВНОЕ ПРАВИЛО ПРО ДВА ЯЗЫКА
+   ГЛАВНОЕ ПРАВИЛО ПРО ЯЗЫКИ
 
-   Правите текст — правьте в ОБОИХ блоках, ru и uz.
-   Если поправить только русский, узбекская версия останется старой.
+   Правите текст — правьте во ВСЕХ трёх блоках: ru, uz и en.
+   Если поправить только русский, остальные версии останутся старыми.
    Страница при этом не сломается, просто покажет разное.
 
    Цены и телефоны так дублировать не нужно: они лежат в shared,
@@ -88,12 +88,12 @@ const DATA = {
     // Номер для кнопки «Позвонить» внизу экрана
     callPhone: '+998 91 354-11-28',
 
-    // Подпись в самом низу страницы. Одинакова на обоих языках.
+    // Подпись в самом низу страницы. Одинакова на всех языках.
     // Чтобы убрать её совсем — напишите вместо всего блока: footer: null
     footer: {
       credit: 'Created by',
-      handle: '@killmesuicide',
-      url: 'https://t.me/killmesuicide',
+      handle: 'tmdev.live',
+      url: 'https://tmdev.live',
       version: 'v 1.0+1'
     }
   },
@@ -212,7 +212,7 @@ const DATA = {
       title: 'Не любите звонить?',
       desc: 'Оставьте номер — перезвоним и всё расскажем.',
       nameLabel: 'Как вас зовут',
-      namePlaceholder: 'Дилноза',
+      namePlaceholder: 'Введите имя',
       phoneLabel: 'Телефон',
       phonePlaceholder: '+998 90 123-45-67',
       courseLabel: 'Какой курс интересует',
@@ -228,11 +228,8 @@ const DATA = {
       needPhone: 'Впишите телефон — без него мы не сможем перезвонить'
     },
 
-    // Две кнопки внизу экрана
-    actions: {
-      call: 'Позвонить и проконсультироваться',
-      signup: 'Записаться на курс'
-    }
+    // Кнопка в самом низу страницы. Ведёт к контактам.
+    signupButton: 'Записаться на курс'
   },
 
   /* ==========================================================================
@@ -347,7 +344,7 @@ const DATA = {
       title: 'Qoʼngʼiroq qilishni yoqtirmaysizmi?',
       desc: 'Raqamingizni qoldiring — oʼzimiz qoʼngʼiroq qilamiz va hammasini aytamiz.',
       nameLabel: 'Ismingiz',
-      namePlaceholder: 'Dilnoza',
+      namePlaceholder: 'Ismingizni kiriting',
       phoneLabel: 'Telefon',
       phonePlaceholder: '+998 90 123-45-67',
       courseLabel: 'Qaysi kurs qiziqtiradi',
@@ -363,10 +360,136 @@ const DATA = {
       needPhone: 'Telefon raqamini yozing — usiz qoʼngʼiroq qila olmaymiz'
     },
 
-    actions: {
-      call: 'Qoʼngʼiroq qilib maslahat olish',
-      signup: 'Kursga yozilish'
-    }
+    signupButton: 'Kursga yozilish'
+  },
+
+  /* ==========================================================================
+     5. АНГЛИЙСКИЙ
+
+     Структура блока совпадает с русским строка в строку.
+     ========================================================================== */
+  en: {
+    langName: 'EN',
+    htmlLang: 'en',
+
+    hero: {
+      heading: 'Make sense of numbers',
+      headingAccent: 'in a single spring.',
+      text: 'Accounting courses for beginners and for those tired of fearing reports.',
+      facts: [
+        { title: 'Courses to choose', note: '2 courses' },
+        { title: 'One lesson',        note: '90 minutes' },
+        { title: 'In a group',        note: 'up to 6 people' }
+      ]
+    },
+
+    courses: {
+      label: 'Programs',
+      title: 'What you can learn',
+      desc: 'The courses run in parallel — start with either one. Tap a row to open the program.',
+      headLeft: 'Course',
+      headRight: 'Lessons',
+      lessonsWord: 'lessons',
+      items: [
+        {
+          title: 'Accounting from scratch',
+          subtitle: 'for a career change',
+          lessons: 36,
+          about: 'The full path: from the first document to a filed report. A good fit if you have never worked with accounting.',
+          chips: ['from scratch', 'lots of practice'],
+          program: [
+            'Source documents and accounts',
+            'Double entry: debit and credit',
+            'Cash and bank accounting',
+            'Final practice on real cases'
+          ]
+        },
+        {
+          title: '1C: Accounting 8.3',
+          subtitle: 'hands-on in the software',
+          lessons: 18,
+          about: 'Every lesson takes place at a computer, inside the program itself. No retelling of the manual.',
+          chips: ['at the computer', 'by documents'],
+          program: [
+            'Setting up a company from scratch',
+            'Purchases, sales, payments',
+            'Closing the month',
+            'Generating reports'
+          ]
+        }
+      ]
+    },
+
+    schedule: {
+      label: 'Schedule',
+      title: 'How the day goes',
+      desc: 'Three groups every weekday, with time for consultations in between.',
+      hours: [
+        { days: 'Mon — Fri', time: '09:00 — 20:00' },
+        { days: 'Saturday',  time: '10:00 — 16:00' },
+        { days: 'Sunday',    time: 'closed' }
+      ],
+      slots: [
+        { time: '09:30', title: 'Morning group',   subtitle: 'Accounting from scratch' },
+        { time: '11:15', title: 'Consultations',   subtitle: 'Free, by phone' },
+        { time: '13:00', title: 'Afternoon group', subtitle: '1C: Accounting 8.3' },
+        { time: '15:00', title: 'One-on-one',      subtitle: 'Individual lesson' },
+        { time: '18:30', title: 'Evening group',   subtitle: '1C: Accounting 8.3' }
+      ],
+      note: {
+        badge: '10',
+        title: 'Running late',
+        text: 'We wait for you up to 10 minutes.'
+      }
+    },
+
+    prices: {
+      label: 'Price',
+      title: 'How much one lesson costs',
+      desc: 'One price, no packages and no hidden terms.',
+      currency: 'UZS',
+      groupCaption: 'Group lesson',
+      groupNote: '90 minutes · up to 6 people in a group',
+      individualTitle: 'One-on-one',
+      individualNote: 'individual lesson with the teacher'
+    },
+
+    contacts: {
+      title: 'Contacts',
+      desc: 'Call us — we will tell you about the course and sign you up.',
+
+      formHint: 'You can skip the call —',
+      formLink: 'leave a request',
+
+      callWord: 'call',
+      people: [
+        { name: 'Elina',              role: 'course enrolment' },
+        { name: 'Zohidjon Saydullayev', role: 'questions about studying' }
+      ]
+    },
+
+    form: {
+      label: 'Request',
+      title: 'Not a fan of calling?',
+      desc: 'Leave your number — we will call you back and explain everything.',
+      nameLabel: 'Your name',
+      namePlaceholder: 'Enter your name',
+      phoneLabel: 'Phone',
+      phonePlaceholder: '+998 90 123-45-67',
+      courseLabel: 'Which course interests you',
+      courseOptions: ['Accounting from scratch', '1C: Accounting 8.3', 'Not decided yet'],
+      button: 'Send request',
+      sending: 'Sending…',
+      okTitle: 'Request sent',
+      okText: 'We will call you back during working hours: Mon — Fri, 09:00 to 20:00.',
+      failTitle: 'Could not send',
+      failText: 'Looks like the connection dropped. Try again or call us — that is faster:',
+      retry: 'Try again',
+      needName: 'Enter your name',
+      needPhone: 'Enter your phone — we cannot call you back without it'
+    },
+
+    signupButton: 'Sign up for a course'
   }
 
 };

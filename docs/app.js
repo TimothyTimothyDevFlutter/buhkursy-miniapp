@@ -13,32 +13,40 @@
 /* ---------------------------------------------------------------------------
    ЯЗЫК
 
-   Страница знает два языка. Какой показать — решается один раз при открытии
+   Страница знает несколько языков. Какой показать — решается при открытии
    в таком порядке:
      1. что человек выбрал в прошлый раз (запоминается в браузере);
      2. если не выбирал — язык его Telegram;
      3. если и это неизвестно — язык из настроек в data.js.
    --------------------------------------------------------------------------- */
 
+// Языки и их порядок в переключателе.
+// Чтобы добавить четвёртый — впишите его сюда и создайте такой же
+// блок в data.js. Больше нигде править не нужно.
+var LANGS = ['ru', 'uz', 'en'];
+
 var LANG = 'ru';   // текущий язык, меняется переключателем
+
+function known(lang) {
+  return LANGS.indexOf(lang) !== -1 && !!DATA[lang];
+}
 
 function pickLang() {
   // 1. прошлый выбор человека
   try {
     var saved = localStorage.getItem('lang');
-    if (saved === 'ru' || saved === 'uz') return saved;
+    if (known(saved)) return saved;
   } catch (e) { /* браузер может запрещать хранение — не страшно */ }
 
   // 2. язык интерфейса Telegram
   var tg = telegram();
   if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-    var code = String(tg.initDataUnsafe.user.language_code || '');
-    if (code.indexOf('uz') === 0) return 'uz';
-    if (code.indexOf('ru') === 0) return 'ru';
+    var code = String(tg.initDataUnsafe.user.language_code || '').slice(0, 2);
+    if (known(code)) return code;
   }
 
   // 3. настройка по умолчанию
-  return DATA.settings.defaultLang === 'uz' ? 'uz' : 'ru';
+  return known(DATA.settings.defaultLang) ? DATA.settings.defaultLang : 'ru';
 }
 
 // Короткая ссылка на тексты текущего языка
@@ -47,7 +55,7 @@ function T() {
 }
 
 function setLang(lang) {
-  if (lang !== 'ru' && lang !== 'uz') return;
+  if (!known(lang)) return;
   if (lang === LANG) return;
 
   LANG = lang;
@@ -103,7 +111,7 @@ function renderHero() {
   var d = T().hero;
   var s = DATA.shared;
 
-  var langs = ['ru', 'uz'].map(function (code) {
+  var langs = LANGS.map(function (code) {
     var on = code === LANG ? ' on' : '';
     return '<button class="lg' + on + '" data-lang="' + code + '" type="button">' +
            esc(DATA[code].langName) + '</button>';
@@ -180,12 +188,12 @@ function renderSchedule() {
     return '<div>' + esc(h.days) + ' <span>' + esc(h.time) + '</span></div>';
   }).join('');
 
+  // Сначала название занятия, время — справа, в фисташковой плашке
   var slots = d.slots.map(function (s) {
     return '<div class="slot">' +
-             '<span class="bar"></span>' +
-             '<span class="tm">' + esc(s.time) + '</span>' +
              '<span class="tx">' + esc(s.title) +
              '<span>' + esc(s.subtitle) + '</span></span>' +
+             '<span class="tm">' + esc(s.time) + '</span>' +
            '</div>';
   }).join('');
 
@@ -411,12 +419,25 @@ function showFailed() {
 
 
 /* ---------------------------------------------------------------------------
-   НИЗ СТРАНИЦЫ И ДВЕ КНОПКИ
+   НИЗ СТРАНИЦЫ
 
-   Две кнопки вместо одной: звонок для тех, кто готов говорить,
-   и запись для тех, кто предпочитает оставить номер.
-   Звонок стоит первым и оформлен ярче — он по-прежнему главный.
+   В конце страницы — кнопка «Записаться на курс». Она не прилипает к экрану,
+   а уезжает вместе с содержимым: человек дочитал до низа и видит, что делать
+   дальше. По нажатию возвращает к контактам, где телефоны и ссылка на заявку.
    --------------------------------------------------------------------------- */
+
+function renderCta() {
+  block('cta').innerHTML =
+    '<button class="cta" type="button" data-gocontacts>' +
+    esc(T().signupButton) + '</button>';
+}
+
+// Прокручивает к блоку контактов
+function goToContacts() {
+  haptic('medium');
+  var host = block('contacts');
+  if (host) host.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 function renderFooter() {
   var f = DATA.shared.footer;
@@ -428,8 +449,9 @@ function renderFooter() {
     ' | ' + esc(f.version);
 }
 
-// Ссылки на Telegram внутри мини-приложения нужно открывать особой командой,
-// иначе обычная ссылка просто ничего не сделает
+// Внешние ссылки внутри мини-приложения нужно открывать командой Telegram,
+// иначе обычная ссылка просто ничего не сделает.
+// Для адресов t.me команда одна, для обычных сайтов — другая.
 function setupFooterLink() {
   var link = block('footer').querySelector('a');
   if (!link) return;
@@ -438,17 +460,13 @@ function setupFooterLink() {
     var tg = telegram();
     if (!tg) return;              // обычный браузер — работает как обычная ссылка
     event.preventDefault();
-    tgTry(function () { tg.openTelegramLink(link.href); });
+
+    if (link.href.indexOf('t.me/') !== -1) {
+      tgTry(function () { tg.openTelegramLink(link.href); });
+    } else {
+      tgTry(function () { tg.openLink(link.href); });
+    }
   });
-}
-
-function renderCta() {
-  var a = T().actions;
-  var showSignup = !!DATA.settings.formUrl;   // без формы вторая кнопка бессмысленна
-
-  block('cta').innerHTML =
-    '<a class="cta" href="' + telHref(DATA.shared.callPhone) + '">' + esc(a.call) + '</a>' +
-    (showSignup ? '<button class="cta second" type="button" data-signup>' + esc(a.signup) + '</button>' : '');
 }
 
 // Прокручивает к форме и ставит курсор в первое поле.
@@ -469,8 +487,11 @@ function goToForm() {
 }
 
 function setupFormLinks() {
-  document.querySelectorAll('[data-signup], [data-goform]').forEach(function (el) {
+  document.querySelectorAll('[data-goform]').forEach(function (el) {
     el.addEventListener('click', goToForm);
+  });
+  document.querySelectorAll('[data-gocontacts]').forEach(function (el) {
+    el.addEventListener('click', goToContacts);
   });
 }
 
@@ -517,9 +538,8 @@ function setupTelegram() {
   tgTry(function () { tg.setHeaderColor(cssColor('--forest')); });
   tgTry(function () { tg.setBackgroundColor(cssColor('--cream')); });
 
-  // Встроенную кнопку Telegram больше не используем: действий стало два,
-  // а она умеет показывать только одно. Обе наши кнопки видны и в браузере,
-  // и внутри Telegram — одинаково.
+  // Встроенную кнопку Telegram не используем: постоянного действия внизу
+  // экрана в этой версии нет, звонок и заявка живут в блоке контактов.
   tgTry(function () { tg.MainButton.hide(); });
 }
 
@@ -583,8 +603,8 @@ function renderAll() {
   renderPrices();
   renderContacts();
   renderForm();
-  renderFooter();
   renderCta();
+  renderFooter();
 
   // Обработчики вешаем после отрисовки: старые исчезли вместе
   // с заменённой разметкой, новые нужно привязать заново

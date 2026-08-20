@@ -31,7 +31,15 @@ body{
 }
 h1,h2,h3{font-family:'Nunito',system-ui,sans-serif}
 a{color:inherit}
-.app{width:100%;max-width:430px;background:var(--cream);min-height:100vh;position:relative;overflow:hidden}
+/* overflow:clip вместо hidden — принципиальная разница.
+   hidden делает контейнер областью прокрутки, и прилипающая кнопка внизу
+   перестаёт прилипать. clip обрезает точно так же, но области прокрутки
+   не создаёт. Старые браузеры clip не знают и оставят hidden: там кнопка
+   просто уедет вместе со страницей, вёрстка не пострадает. */
+.app{
+  width:100%;max-width:430px;background:var(--cream);min-height:100vh;position:relative;
+  overflow:hidden;overflow:clip;
+}
 @media(min-width:700px){
   body{padding:22px 0}
   .app{border-radius:28px;box-shadow:0 20px 50px rgba(31,51,38,.24);min-height:auto}
@@ -123,11 +131,11 @@ h2{font-weight:900;font-size:23px;letter-spacing:-.025em;line-height:1.2;margin-
 .hours div span{display:block;font-size:11px;color:var(--moss);font-weight:400}
 .slot{display:flex;align-items:center;gap:13px;padding:14px 15px;border-top:1px solid var(--line)}
 .slot:first-of-type{border-top:0}
-.slot .bar{width:3px;align-self:stretch;border-radius:3px;background:var(--pist)}
-.slot.off .bar{background:var(--line)}
+/* Время справа, в фисташковой плашке */
 .slot .tm{
-  width:50px;flex-shrink:0;font-variant-numeric:tabular-nums;
+  flex-shrink:0;font-variant-numeric:tabular-nums;
   font-family:'Nunito',sans-serif;font-weight:800;font-size:13.5px;color:var(--forest);
+  background:var(--pist);border-radius:11px;padding:8px 11px;
 }
 .slot .tx{flex:1;font-size:14px;font-weight:600}
 .slot .tx span{display:block;font-size:12px;color:var(--muted);font-weight:400}
@@ -188,19 +196,6 @@ h2{font-weight:900;font-size:23px;letter-spacing:-.025em;line-height:1.2;margin-
 .tel em{font-style:normal;font-size:11.5px;font-weight:700;color:var(--moss);letter-spacing:.04em;text-transform:uppercase}
 footer{padding:16px 22px 100px;text-align:center;font-size:11.5px;color:var(--muted)}
 
-/* ——— липкая кнопка ——— */
-.bar{
-  position:sticky;bottom:0;padding:12px 22px 18px;
-  background:linear-gradient(to top,var(--cream) 58%,rgba(250,251,245,0));
-}
-.cta{
-  display:block;width:100%;border:0;cursor:pointer;text-decoration:none;
-  background:var(--forest);color:var(--pist);
-  font-family:'Nunito',sans-serif;font-weight:800;font-size:15.5px;
-  padding:16px;border-radius:15px;text-align:center;
-  box-shadow:0 8px 22px rgba(31,51,38,.26);transition:transform .15s ease;
-}
-.cta:active{transform:scale(.985)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}html{scroll-behavior:auto}}
 
 /* ============================================================
@@ -218,11 +213,9 @@ footer{padding:16px 22px 100px;text-align:center;font-size:11.5px;color:var(--mu
 /* Шапка не заезжает под вырез камеры */
 .hero{padding-top:calc(24px + env(safe-area-inset-top,0px))}
 
-/* Кнопка внизу не липнет вплотную к жестовой полосе */
-.bar{padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
 
 /* Запас под кнопку, чтобы она не накрывала последнюю строку текста */
-footer{padding-bottom:calc(155px + env(safe-area-inset-bottom,0px))}
+footer{padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
 
 
 /* ============================================================
@@ -314,7 +307,6 @@ footer{padding-bottom:calc(155px + env(safe-area-inset-bottom,0px))}
    1. Переключатель языка справа от названия
    2. Плашки в шапке: сверху название, снизу уточнение
    3. Часы работы — на всю ширину, поровну
-   4. Две кнопки внизу вместо одной
    ============================================================ */
 
 /* --- 1. Переключатель языка --- */
@@ -322,11 +314,13 @@ footer{padding-bottom:calc(155px + env(safe-area-inset-bottom,0px))}
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   position:relative;z-index:1;
 }
-.langs{display:flex;gap:4px;background:rgba(207,227,168,.14);border-radius:11px;padding:3px}
+/* Три языка вместо двух: кнопки уплотнены, иначе на узком экране
+   название компании переносится на вторую строку */
+.langs{display:flex;gap:3px;background:rgba(207,227,168,.14);border-radius:11px;padding:3px;flex-shrink:0}
 .lg{
   border:0;cursor:pointer;background:none;color:#B9CDAE;
-  font-family:'Nunito',sans-serif;font-weight:800;font-size:11.5px;letter-spacing:.04em;
-  padding:5px 9px;border-radius:8px;transition:background .18s ease,color .18s ease;
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:11px;letter-spacing:.03em;
+  padding:5px 7px;border-radius:8px;transition:background .18s ease,color .18s ease;
 }
 .lg.on{background:var(--pist);color:var(--forest)}
 
@@ -344,12 +338,6 @@ footer{padding-bottom:calc(155px + env(safe-area-inset-bottom,0px))}
 .hours{display:flex;gap:7px;flex-wrap:nowrap;justify-content:space-between}
 .hours div{flex:1;min-width:0;text-align:center;padding:9px 8px}
 
-/* --- 4. Две кнопки внизу --- */
-.bar{display:flex;flex-direction:column;gap:9px}
-.cta.second{
-  background:var(--pist-2);color:var(--forest);box-shadow:none;
-  border:1px solid var(--line);
-}
 
 /* Подпись автора внизу страницы */
 footer a{color:var(--moss);text-decoration:none;font-weight:600}
@@ -363,3 +351,24 @@ footer a{color:var(--moss);text-decoration:none;font-weight:600}
   font-family:'Golos Text',system-ui,sans-serif;font-size:14px;font-weight:700;
   color:var(--moss);text-decoration:underline;text-underline-offset:3px;
 }
+
+/* Кнопка внизу экрана. Прилипает: не уезжает при прокрутке, всегда под рукой.
+   Плавный переход от прозрачного к фону — чтобы текст не обрывался под ней резко.
+
+   Оформлена светлой намеренно: когда человек долистывает до формы, прямо над
+   этой кнопкой оказывается тёмная «Отправить заявку». Две одинаковые кнопки
+   подряд читались бы как два способа отправить форму. Эта не отправляет,
+   а возвращает к контактам — значит, и выглядеть должна иначе. */
+.endbar{
+  position:sticky;bottom:0;z-index:5;
+  padding:12px 22px calc(18px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(to top,var(--cream) 62%,rgba(250,251,245,0));
+}
+.endbar .cta{
+  display:block;width:100%;cursor:pointer;
+  background:var(--pist-2);color:var(--forest);border:1px solid var(--line);
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:15.5px;
+  padding:16px;border-radius:15px;text-align:center;
+  transition:transform .15s ease;
+}
+.endbar .cta:active{transform:scale(.985)}

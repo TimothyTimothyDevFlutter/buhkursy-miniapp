@@ -77,9 +77,8 @@ export default {
 
     // Язык подсказывает, на каком языке перезванивать.
     // Если страница старая и языка не прислала — строки просто не будет.
-    const langLine = lang === 'uz' ? 'Язык: узбекский\n'
-                   : lang === 'ru' ? 'Язык: русский\n'
-                   : '';
+    const langNames = { ru: 'русский', uz: 'узбекский', en: 'английский' };
+    const langLine = langNames[lang] ? 'Язык: ' + langNames[lang] + '\n' : '';
 
     const text =
       '🔔 Новая заявка\n\n' +
