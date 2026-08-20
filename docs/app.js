@@ -411,7 +411,27 @@ function showFailed() {
    --------------------------------------------------------------------------- */
 
 function renderFooter() {
-  block('footer').innerHTML = esc(T().footer);
+  var f = DATA.shared.footer;
+  if (!f) { block('footer').innerHTML = ''; return; }
+
+  block('footer').innerHTML =
+    esc(f.credit) + ' ' +
+    '<a href="' + esc(f.url) + '" target="_blank" rel="noopener">' + esc(f.handle) + '</a>' +
+    ' | ' + esc(f.version);
+}
+
+// Ссылки на Telegram внутри мини-приложения нужно открывать особой командой,
+// иначе обычная ссылка просто ничего не сделает
+function setupFooterLink() {
+  var link = block('footer').querySelector('a');
+  if (!link) return;
+
+  link.addEventListener('click', function (event) {
+    var tg = telegram();
+    if (!tg) return;              // обычный браузер — работает как обычная ссылка
+    event.preventDefault();
+    tgTry(function () { tg.openTelegramLink(link.href); });
+  });
 }
 
 function renderCta() {
@@ -562,6 +582,7 @@ function renderAll() {
   setupAccordion();
   setupForm();
   setupSignupButton();
+  setupFooterLink();
   setupHaptics();
 }
 
