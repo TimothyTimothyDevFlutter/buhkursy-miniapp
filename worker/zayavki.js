@@ -45,6 +45,7 @@ export default {
     const name = clean(data.name, 80);
     const phone = clean(data.phone, 40);
     const course = clean(data.course, 80);
+    const lang = clean(data.lang, 5);   // на каком языке человек читал страницу
 
     // --- ловушка для роботов ---
     // На странице есть невидимое поле. Человек его не заполнит, а робот,
@@ -74,11 +75,18 @@ export default {
       day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
     });
 
+    // Язык подсказывает, на каком языке перезванивать.
+    // Если страница старая и языка не прислала — строки просто не будет.
+    const langLine = lang === 'uz' ? 'Язык: узбекский\n'
+                   : lang === 'ru' ? 'Язык: русский\n'
+                   : '';
+
     const text =
       '🔔 Новая заявка\n\n' +
       'Имя: ' + name + '\n' +
       'Телефон: ' + phone + '\n' +
-      'Курс: ' + (course || 'не указан') + '\n\n' +
+      'Курс: ' + (course || 'не указан') + '\n' +
+      langLine + '\n' +
       'Оставлена: ' + when;
 
     // --- отправляем в Telegram ---

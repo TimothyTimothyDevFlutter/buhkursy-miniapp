@@ -2,19 +2,65 @@
    ПОВЕДЕНИЕ И СБОРКА СТРАНИЦЫ
 
    Этот файл берёт содержимое из data.js и расставляет его по пустым блокам
-   в index.html. Плюс отвечает за раскрытие курсов по нажатию.
+   в index.html. Плюс отвечает за раскрытие курсов, переключение языка,
+   форму заявки и связь с Telegram.
 
    Здесь текстов нет — если нужно поменять слово, цену или телефон,
    вам нужен файл data.js, а не этот.
-
-   Открывать этот файл имеет смысл только тогда, когда нужно изменить
-   само устройство страницы: добавить новый вид блока или поменять логику.
    ============================================================================ */
 
 
 /* ---------------------------------------------------------------------------
+   ЯЗЫК
+
+   Страница знает два языка. Какой показать — решается один раз при открытии
+   в таком порядке:
+     1. что человек выбрал в прошлый раз (запоминается в браузере);
+     2. если не выбирал — язык его Telegram;
+     3. если и это неизвестно — язык из настроек в data.js.
+   --------------------------------------------------------------------------- */
+
+var LANG = 'ru';   // текущий язык, меняется переключателем
+
+function pickLang() {
+  // 1. прошлый выбор человека
+  try {
+    var saved = localStorage.getItem('lang');
+    if (saved === 'ru' || saved === 'uz') return saved;
+  } catch (e) { /* браузер может запрещать хранение — не страшно */ }
+
+  // 2. язык интерфейса Telegram
+  var tg = telegram();
+  if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+    var code = String(tg.initDataUnsafe.user.language_code || '');
+    if (code.indexOf('uz') === 0) return 'uz';
+    if (code.indexOf('ru') === 0) return 'ru';
+  }
+
+  // 3. настройка по умолчанию
+  return DATA.settings.defaultLang === 'uz' ? 'uz' : 'ru';
+}
+
+// Короткая ссылка на тексты текущего языка
+function T() {
+  return DATA[LANG];
+}
+
+function setLang(lang) {
+  if (lang !== 'ru' && lang !== 'uz') return;
+  if (lang === LANG) return;
+
+  LANG = lang;
+  try { localStorage.setItem('lang', lang); } catch (e) {}
+  document.documentElement.lang = T().htmlLang;
+
+  haptic('light');
+  renderAll();
+}
+
+
+/* ---------------------------------------------------------------------------
    МАЛЕНЬКИЕ ПОМОЩНИКИ
-   Три коротких правила, которыми пользуются все блоки ниже.
    --------------------------------------------------------------------------- */
 
 // Находит на странице пустой блок по его подписи data-block из index.html
@@ -22,8 +68,7 @@ function block(name) {
   return document.querySelector('[data-block="' + name + '"]');
 }
 
-// Обезвреживает символы < > &, если они вдруг попадут в текст из data.js.
-// Нужен для того, чтобы случайный символ в тексте не сломал вёрстку.
+// Обезвреживает символы < > &, если они вдруг попадут в текст из data.js
 function esc(text) {
   return String(text)
     .replace(/&/g, '&amp;')
@@ -41,9 +86,7 @@ function telHref(phone) {
   return 'tel:' + String(phone).replace(/[^\d+]/g, '');
 }
 
-// Достаёт цвет из палитры styles.css по имени, например '--forest'.
-// Нужен, чтобы кнопка Telegram красилась теми же цветами, что и страница:
-// поменяли цвет в одном месте — сменился и там, и там.
+// Достаёт цвет из палитры styles.css по имени, например '--forest'
 function cssColor(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
@@ -51,19 +94,31 @@ function cssColor(name) {
 
 /* ---------------------------------------------------------------------------
    ПРИВЕТСТВИЕ
+
+   Справа от названия компании — переключатель языка.
+   В плашках под заголовком сверху идёт название, снизу — уточнение.
    --------------------------------------------------------------------------- */
 
 function renderHero() {
-  var d = DATA.hero;
+  var d = T().hero;
+  var s = DATA.shared;
+
+  var langs = ['ru', 'uz'].map(function (code) {
+    var on = code === LANG ? ' on' : '';
+    return '<button class="lg' + on + '" data-lang="' + code + '" type="button">' +
+           esc(DATA[code].langName) + '</button>';
+  }).join('');
 
   var facts = d.facts.map(function (f) {
-    return '<div><b>' + esc(f.value) + '</b><span>' +
-           esc(f.line1) + '<br>' + esc(f.line2) + '</span></div>';
+    return '<div><b>' + esc(f.title) + '</b><span>' + esc(f.note) + '</span></div>';
   }).join('');
 
   block('hero').innerHTML =
-    '<div class="logo"><span class="m">' + esc(DATA.company.logo) + '</span>' +
-    '<b>' + esc(DATA.company.name) + '</b></div>' +
+    '<div class="top">' +
+      '<div class="logo"><span class="m">' + esc(s.logo) + '</span>' +
+      '<b>' + esc(s.brand) + '</b></div>' +
+      '<div class="langs">' + langs + '</div>' +
+    '</div>' +
     '<h1>' + esc(d.heading) + '<span>' + esc(d.headingAccent) + '</span></h1>' +
     '<p class="lede">' + esc(d.text) + '</p>' +
     '<div class="strip">' + facts + '</div>';
@@ -72,11 +127,10 @@ function renderHero() {
 
 /* ---------------------------------------------------------------------------
    КУРСЫ
-   Для каждого курса создаётся пара: кнопка-строка и скрытый блок с программой.
    --------------------------------------------------------------------------- */
 
 function renderCourses() {
-  var d = DATA.courses;
+  var d = T().courses;
 
   var rows = d.items.map(function (c) {
     var chips = c.chips.map(function (chip) {
@@ -90,7 +144,7 @@ function renderCourses() {
     return '<button class="row" data-acc>' +
              '<span><span class="t">' + esc(c.title) + '</span>' +
              '<span class="s">' + esc(c.subtitle) + '</span></span>' +
-             '<span class="n">' + esc(c.lessons) + '<small>занятий</small></span>' +
+             '<span class="n">' + esc(c.lessons) + '<small>' + esc(d.lessonsWord) + '</small></span>' +
              '<span class="pl">+</span>' +
            '</button>' +
            '<div class="body"><div class="in">' +
@@ -114,26 +168,24 @@ function renderCourses() {
 
 /* ---------------------------------------------------------------------------
    РАСПИСАНИЕ
+
+   Свободные места убраны намеренно: цифры, которые обновляются вручную,
+   со временем начинают врать, а это хуже, чем их отсутствие.
    --------------------------------------------------------------------------- */
 
 function renderSchedule() {
-  var d = DATA.schedule;
+  var d = T().schedule;
 
   var hours = d.hours.map(function (h) {
     return '<div>' + esc(h.days) + ' <span>' + esc(h.time) + '</span></div>';
   }).join('');
 
   var slots = d.slots.map(function (s) {
-    // free: false — строка притушена, а метка становится серой
-    var slotClass = s.free ? 'slot' : 'slot off';
-    var tagClass = s.free ? 'tag' : 'tag no';
-
-    return '<div class="' + slotClass + '">' +
+    return '<div class="slot">' +
              '<span class="bar"></span>' +
              '<span class="tm">' + esc(s.time) + '</span>' +
              '<span class="tx">' + esc(s.title) +
              '<span>' + esc(s.subtitle) + '</span></span>' +
-             '<span class="' + tagClass + '">' + esc(s.seats) + '</span>' +
            '</div>';
   }).join('');
 
@@ -156,7 +208,8 @@ function renderSchedule() {
    --------------------------------------------------------------------------- */
 
 function renderPrices() {
-  var d = DATA.prices;
+  var d = T().prices;
+  var p = DATA.shared.prices;
 
   block('prices').innerHTML =
     '<span class="label">' + esc(d.label) + '</span>' +
@@ -164,13 +217,13 @@ function renderPrices() {
     '<p class="desc">' + esc(d.desc) + '</p>' +
     '<div class="price-main">' +
       '<div class="cl">' + esc(d.groupCaption) + '</div>' +
-      '<div class="amount">' + money(d.group) + ' <i>' + esc(d.currency) + '</i></div>' +
+      '<div class="amount">' + money(p.group) + ' <i>' + esc(d.currency) + '</i></div>' +
       '<div class="note">' + esc(d.groupNote) + '</div>' +
     '</div>' +
     '<div class="prow">' +
       '<div><b>' + esc(d.individualTitle) + '</b>' +
       '<small>' + esc(d.individualNote) + '</small></div>' +
-      '<div class="v">' + money(d.individual) +
+      '<div class="v">' + money(p.individual) +
       '<span>' + esc(d.currency) + '</span></div>' +
     '</div>';
 }
@@ -178,16 +231,20 @@ function renderPrices() {
 
 /* ---------------------------------------------------------------------------
    КОНТАКТЫ
-   Буква в квадратике — это первая буква имени, отдельно её задавать не нужно.
+
+   Имена и роли берутся из блока языка, телефоны — из общего блока shared,
+   по порядку. Поэтому цену и номер достаточно поправить один раз.
    --------------------------------------------------------------------------- */
 
 function renderContacts() {
-  var d = DATA.contacts;
+  var d = T().contacts;
 
-  var people = d.people.map(function (p) {
-    var phones = p.phones.map(function (phone) {
+  var people = d.people.map(function (p, i) {
+    var numbers = DATA.shared.phones[i] || [];
+
+    var phones = numbers.map(function (phone) {
       return '<a class="tel" href="' + telHref(phone) + '">' +
-             esc(phone) + ' <em>позвонить</em></a>';
+             esc(phone) + ' <em>' + esc(d.callWord) + '</em></a>';
     }).join('');
 
     return '<div class="person">' +
@@ -209,18 +266,14 @@ function renderContacts() {
    ЗАЯВКА
 
    Форма показывается только тогда, когда в data.js заполнен адрес
-   приёмника. Пока он пустой, блока на странице просто нет — лучше
-   отсутствие формы, чем форма, которая молча теряет заявки.
-
-   Сам адрес приёмника не секрет: он ничего не умеет, кроме как принять
-   имя с телефоном. Секрет — токен бота, и он лежит не здесь, а в
-   Cloudflare, куда посторонним хода нет.
+   приёмника. Пока он пустой, блока на странице нет — лучше отсутствие
+   формы, чем форма, которая молча теряет заявки.
    --------------------------------------------------------------------------- */
 
 function renderForm() {
-  var d = DATA.form;
+  var d = T().form;
   var host = block('form');
-  if (!d || !d.url) return;        // не настроено — блока не будет
+  if (!DATA.settings.formUrl) { host.hidden = true; return; }
 
   var options = d.courseOptions.map(function (c) {
     return '<option value="' + esc(c) + '">' + esc(c) + '</option>';
@@ -272,13 +325,13 @@ function clearBad(form) {
 }
 
 function setupForm() {
-  var d = DATA.form;
   var host = block('form');
   var form = host.querySelector('form');
   if (!form) return;
 
   form.addEventListener('submit', function (event) {
     event.preventDefault();
+    var d = T().form;
     clearBad(form);
 
     var name = form.name.value.trim();
@@ -295,20 +348,20 @@ function setupForm() {
     button.disabled = true;
     button.textContent = d.sending;
 
-    fetch(d.url, {
+    fetch(DATA.settings.formUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: name,
         phone: phone,
         course: course,
+        lang: LANG,                      // на каком языке человек читал страницу
         company: form.company.value      // ловушка
       })
     })
       .then(function (res) { return res.json(); })
       .then(function (result) {
-        if (result && result.ok) { showSent(); }
-        else { showFailed(); }
+        if (result && result.ok) { showSent(); } else { showFailed(); }
       })
       .catch(function () {
         // Сюда попадаем, когда интернета нет вовсе
@@ -318,7 +371,7 @@ function setupForm() {
 }
 
 function showSent() {
-  var d = DATA.form;
+  var d = T().form;
   haptic('medium');
   block('form').innerHTML =
     '<div class="res ok">' +
@@ -329,7 +382,7 @@ function showSent() {
 }
 
 function showFailed() {
-  var d = DATA.form;
+  var d = T().form;
   haptic('medium');
   // Заявка не ушла — человек не должен остаться ни с чем.
   // Показываем телефон: живой звонок надёжнее любой формы.
@@ -337,7 +390,8 @@ function showFailed() {
     '<div class="res no">' +
       '<b>' + esc(d.failTitle) + '</b>' +
       '<p>' + esc(d.failText) + '</p>' +
-      '<a class="call" href="' + telHref(d.failPhone) + '">' + esc(d.failPhone) + '</a>' +
+      '<a class="call" href="' + telHref(DATA.shared.callPhone) + '">' +
+      esc(DATA.shared.callPhone) + '</a>' +
       '<button class="again" type="button">' + esc(d.retry) + '</button>' +
     '</div>';
 
@@ -349,17 +403,45 @@ function showFailed() {
 
 
 /* ---------------------------------------------------------------------------
-   НИЗ СТРАНИЦЫ И КНОПКА
+   НИЗ СТРАНИЦЫ И ДВЕ КНОПКИ
+
+   Две кнопки вместо одной: звонок для тех, кто готов говорить,
+   и запись для тех, кто предпочитает оставить номер.
+   Звонок стоит первым и оформлен ярче — он по-прежнему главный.
    --------------------------------------------------------------------------- */
 
 function renderFooter() {
-  block('footer').innerHTML = esc(DATA.footer);
+  block('footer').innerHTML = esc(T().footer);
 }
 
 function renderCta() {
+  var a = T().actions;
+  var showSignup = !!DATA.settings.formUrl;   // без формы вторая кнопка бессмысленна
+
   block('cta').innerHTML =
-    '<a class="cta" href="' + telHref(DATA.cta.phone) + '">' +
-    esc(DATA.cta.text) + '</a>';
+    '<a class="cta" href="' + telHref(DATA.shared.callPhone) + '">' + esc(a.call) + '</a>' +
+    (showSignup ? '<button class="cta second" type="button" data-signup>' + esc(a.signup) + '</button>' : '');
+}
+
+// Кнопка «Записаться» прокручивает к форме и ставит курсор в первое поле
+function setupSignupButton() {
+  var button = block('cta').querySelector('[data-signup]');
+  if (!button) return;
+
+  button.addEventListener('click', function () {
+    haptic('medium');
+    var host = block('form');
+    if (host.hidden) return;
+
+    host.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    var first = host.querySelector('input[name="name"]');
+    if (first) {
+      // Ждём конца прокрутки: если поставить курсор сразу,
+      // телефон откроет клавиатуру и прокрутка собьётся
+      setTimeout(function () { first.focus({ preventScroll: true }); }, 450);
+    }
+  });
 }
 
 
@@ -368,13 +450,9 @@ function renderCta() {
 
    Страница живёт в двух местах сразу: внутри Telegram и в обычном браузере.
    Всё телеграмное собрано здесь и включается только тогда, когда Telegram
-   действительно рядом. В браузере эти функции молча ничего не делают,
-   и страница работает ровно так же, как работала до этого этапа.
+   действительно рядом.
    --------------------------------------------------------------------------- */
 
-// Возвращает Telegram, если страница открыта внутри мессенджера, иначе null.
-// Проверка по platform, а не по наличию библиотеки: библиотека загрузится
-// и в обычном браузере, но платформа там будет 'unknown'.
 function telegram() {
   var tg = window.Telegram && window.Telegram.WebApp;
   if (!tg || !tg.platform || tg.platform === 'unknown') return null;
@@ -388,7 +466,6 @@ function tgTry(action) {
 }
 
 // Лёгкий отклик-вибрация. Работает только на телефоне внутри Telegram.
-// Вызываем редко и осознанно: вибрация на каждое касание раздражает.
 function haptic(strength) {
   var tg = telegram();
   if (!tg || !tg.HapticFeedback) return;
@@ -399,44 +476,26 @@ function setupTelegram() {
   var tg = telegram();
   if (!tg) return;            // обычный браузер — дальше ничего не делаем
 
-  // Сообщаем мессенджеру, что страница загрузилась и её можно показывать
   tg.ready();
-
-  // Открываем окно сразу во весь экран, а не наполовину
   tg.expand();
 
   // Запрещаем закрывать приложение смахиванием вниз: страница длинная,
   // и человек легко закрыл бы её, пытаясь просто пролистать вверх
   tgTry(function () { tg.disableVerticalSwipes(); });
 
-  // Красим рамку самого Telegram в фирменные цвета, чтобы верх и низ
-  // мессенджера не спорили с оформлением страницы
+  // Красим рамку самого Telegram в фирменные цвета
   tgTry(function () { tg.setHeaderColor(cssColor('--forest')); });
   tgTry(function () { tg.setBackgroundColor(cssColor('--cream')); });
 
-  // Прячем нашу нижнюю кнопку и показываем встроенную кнопку Telegram
-  document.body.classList.add('tg-native-button');
-
-  tgTry(function () {
-    tg.MainButton.setParams({
-      text: DATA.cta.text,
-      color: cssColor('--forest'),
-      text_color: cssColor('--pist'),
-      is_visible: true
-    });
-  });
-
-  tg.MainButton.onClick(function () {
-    haptic('medium');
-    window.location.href = telHref(DATA.cta.phone);
-  });
+  // Встроенную кнопку Telegram больше не используем: действий стало два,
+  // а она умеет показывать только одно. Обе наши кнопки видны и в браузере,
+  // и внутри Telegram — одинаково.
+  tgTry(function () { tg.MainButton.hide(); });
 }
 
 
 /* ---------------------------------------------------------------------------
    РАСКРЫТИЕ КУРСОВ
-   Нажали на строку: все открытые закрываются, нажатая раскрывается.
-   Повторное нажатие по той же строке — закрывает её.
    --------------------------------------------------------------------------- */
 
 function setupAccordion() {
@@ -462,11 +521,16 @@ function setupAccordion() {
 
 
 /* ---------------------------------------------------------------------------
-   ОТКЛИК НА ЗВОНОК
-   Вибрация посильнее в момент, когда человек нажимает на номер.
-   Всего в приложении три места с вибрацией: раскрытие курса, нажатие
-   на телефон и нажатие на кнопку внизу. Больше не нужно.
+   ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКА И ОТКЛИК НА ЗВОНОК
    --------------------------------------------------------------------------- */
+
+function setupLangSwitch() {
+  block('hero').querySelectorAll('[data-lang]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      setLang(button.getAttribute('data-lang'));
+    });
+  });
+}
 
 function setupHaptics() {
   document.querySelectorAll('.tel, .cta').forEach(function (link) {
@@ -477,18 +541,31 @@ function setupHaptics() {
 
 /* ---------------------------------------------------------------------------
    ЗАПУСК
-   Порядок вызовов совпадает с порядком блоков на странице.
+
+   renderAll собирает всю страницу заново. Вызывается при открытии
+   и каждый раз при смене языка.
    --------------------------------------------------------------------------- */
 
-renderHero();
-renderCourses();
-renderSchedule();
-renderPrices();
-renderContacts();
-renderForm();
-renderFooter();
-renderCta();
-setupAccordion();
-setupForm();
-setupHaptics();
+function renderAll() {
+  renderHero();
+  renderCourses();
+  renderSchedule();
+  renderPrices();
+  renderContacts();
+  renderForm();
+  renderFooter();
+  renderCta();
+
+  // Обработчики вешаем после отрисовки: старые исчезли вместе
+  // с заменённой разметкой, новые нужно привязать заново
+  setupLangSwitch();
+  setupAccordion();
+  setupForm();
+  setupSignupButton();
+  setupHaptics();
+}
+
+LANG = pickLang();
+document.documentElement.lang = DATA[LANG].htmlLang;
+renderAll();
 setupTelegram();
