@@ -245,3 +245,71 @@ body.tg-native-button footer{padding-bottom:calc(24px + env(safe-area-inset-bott
 /* Подпись курса прилипала к названию и читалась как одно слово:
    «Бухгалтер с нулядля смены профессии». Теперь она с новой строки. */
 .row .s{display:block}
+
+/* ============================================================
+   ЭТАП 7: ФОРМА ЗАЯВКИ
+
+   Оформление подчинено существующему: те же скругления,
+   те же цвета из палитры наверху, те же два шрифта.
+   Ничего нового не вводится, кроме одного цвета для ошибки.
+   ============================================================ */
+
+.lead{margin-top:4px}
+.fld{display:block;margin-bottom:11px}
+.fld > span{
+  display:block;font-size:12px;font-weight:600;color:var(--muted);
+  margin-bottom:5px;padding-left:2px;
+}
+.fld input,.fld select{
+  width:100%;background:#fff;border:1px solid var(--line);border-radius:14px;
+  padding:14px 15px;font-family:'Golos Text',system-ui,sans-serif;font-size:15px;
+  color:var(--ink);appearance:none;-webkit-appearance:none;
+}
+.fld input::placeholder{color:#70776B}
+.fld input:focus,.fld select:focus{outline:2px solid var(--moss);outline-offset:-1px}
+.fld select{
+  background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234F754B' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 16px center;padding-right:38px;
+}
+.fld.bad input{border-color:#A8452F}
+.fld .err{display:block;font-size:12px;color:#A8452F;margin-top:5px;padding-left:2px}
+
+/* невидимая ловушка для роботов — человек её не увидит и не заполнит */
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+
+.send{
+  display:block;width:100%;border:0;cursor:pointer;
+  background:var(--forest);color:var(--pist);
+  font-family:'Nunito',sans-serif;font-weight:800;font-size:15.5px;
+  padding:16px;border-radius:15px;text-align:center;margin-top:14px;
+  transition:transform .15s ease,opacity .15s ease;
+}
+.send:active{transform:scale(.985)}
+.send[disabled]{opacity:.6;cursor:default}
+
+/* Экран «получилось» и экран «не получилось» */
+.res{border-radius:18px;padding:20px;text-align:center}
+.res b{
+  display:block;font-family:'Nunito',sans-serif;font-weight:900;
+  font-size:19px;margin-bottom:6px;
+}
+.res p{font-size:14px;line-height:1.5}
+.res.ok{background:var(--forest);color:var(--pist)}
+.res.ok p{color:#B9CDAE}
+.res.ok .tick{
+  width:44px;height:44px;border-radius:50%;background:var(--pist);color:var(--forest);
+  display:grid;place-items:center;margin:0 auto 12px;font-size:22px;font-weight:700;
+}
+.res.no{background:#FBEEEA;border:1px solid #F0D6CE;color:var(--ink)}
+.res.no b{color:#A8452F}
+.res.no p{color:var(--muted)}
+.res.no .call{
+  display:inline-block;margin-top:12px;background:var(--forest);color:var(--pist);
+  text-decoration:none;font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;
+  padding:13px 20px;border-radius:14px;font-variant-numeric:tabular-nums;
+}
+.res.no .again{
+  display:block;width:100%;margin-top:10px;border:0;background:none;cursor:pointer;
+  font-family:'Golos Text',sans-serif;font-size:13.5px;font-weight:600;
+  color:var(--moss);text-decoration:underline;padding:6px;
+}

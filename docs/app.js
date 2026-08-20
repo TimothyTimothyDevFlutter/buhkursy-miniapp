@@ -206,6 +206,149 @@ function renderContacts() {
 
 
 /* ---------------------------------------------------------------------------
+   ЗАЯВКА
+
+   Форма показывается только тогда, когда в data.js заполнен адрес
+   приёмника. Пока он пустой, блока на странице просто нет — лучше
+   отсутствие формы, чем форма, которая молча теряет заявки.
+
+   Сам адрес приёмника не секрет: он ничего не умеет, кроме как принять
+   имя с телефоном. Секрет — токен бота, и он лежит не здесь, а в
+   Cloudflare, куда посторонним хода нет.
+   --------------------------------------------------------------------------- */
+
+function renderForm() {
+  var d = DATA.form;
+  var host = block('form');
+  if (!d || !d.url) return;        // не настроено — блока не будет
+
+  var options = d.courseOptions.map(function (c) {
+    return '<option value="' + esc(c) + '">' + esc(c) + '</option>';
+  }).join('');
+
+  host.hidden = false;
+  host.innerHTML =
+    '<span class="label">' + esc(d.label) + '</span>' +
+    '<h2>' + esc(d.title) + '</h2>' +
+    '<p class="desc">' + esc(d.desc) + '</p>' +
+    '<form class="lead" novalidate>' +
+      '<label class="fld" data-for="name">' +
+        '<span>' + esc(d.nameLabel) + '</span>' +
+        '<input name="name" type="text" autocomplete="name" placeholder="' + esc(d.namePlaceholder) + '">' +
+      '</label>' +
+      '<label class="fld" data-for="phone">' +
+        '<span>' + esc(d.phoneLabel) + '</span>' +
+        '<input name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="' + esc(d.phonePlaceholder) + '">' +
+      '</label>' +
+      '<label class="fld">' +
+        '<span>' + esc(d.courseLabel) + '</span>' +
+        '<select name="course">' + options + '</select>' +
+      '</label>' +
+      // Поле-ловушка: человек его не видит, робот заполняет и выдаёт себя
+      '<input class="hp" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">' +
+      '<button class="send" type="submit">' + esc(d.button) + '</button>' +
+    '</form>';
+}
+
+// Показывает подсказку под незаполненным полем
+function markBad(form, fieldName, message) {
+  var box = form.querySelector('[data-for="' + fieldName + '"]');
+  if (!box) return;
+  box.classList.add('bad');
+  if (!box.querySelector('.err')) {
+    var e = document.createElement('span');
+    e.className = 'err';
+    e.textContent = message;
+    box.appendChild(e);
+  }
+}
+
+function clearBad(form) {
+  form.querySelectorAll('.fld.bad').forEach(function (box) {
+    box.classList.remove('bad');
+    var e = box.querySelector('.err');
+    if (e) e.remove();
+  });
+}
+
+function setupForm() {
+  var d = DATA.form;
+  var host = block('form');
+  var form = host.querySelector('form');
+  if (!form) return;
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    clearBad(form);
+
+    var name = form.name.value.trim();
+    var phone = form.phone.value.trim();
+    var course = form.course.value;
+
+    // Проверяем до отправки: пустая заявка бесполезна обеим сторонам
+    var ok = true;
+    if (name.length < 2) { markBad(form, 'name', d.needName); ok = false; }
+    if (phone.replace(/\D/g, '').length < 7) { markBad(form, 'phone', d.needPhone); ok = false; }
+    if (!ok) { haptic('medium'); return; }
+
+    var button = form.querySelector('.send');
+    button.disabled = true;
+    button.textContent = d.sending;
+
+    fetch(d.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name,
+        phone: phone,
+        course: course,
+        company: form.company.value      // ловушка
+      })
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (result) {
+        if (result && result.ok) { showSent(); }
+        else { showFailed(); }
+      })
+      .catch(function () {
+        // Сюда попадаем, когда интернета нет вовсе
+        showFailed();
+      });
+  });
+}
+
+function showSent() {
+  var d = DATA.form;
+  haptic('medium');
+  block('form').innerHTML =
+    '<div class="res ok">' +
+      '<div class="tick">✓</div>' +
+      '<b>' + esc(d.okTitle) + '</b>' +
+      '<p>' + esc(d.okText) + '</p>' +
+    '</div>';
+}
+
+function showFailed() {
+  var d = DATA.form;
+  haptic('medium');
+  // Заявка не ушла — человек не должен остаться ни с чем.
+  // Показываем телефон: живой звонок надёжнее любой формы.
+  block('form').innerHTML =
+    '<div class="res no">' +
+      '<b>' + esc(d.failTitle) + '</b>' +
+      '<p>' + esc(d.failText) + '</p>' +
+      '<a class="call" href="' + telHref(d.failPhone) + '">' + esc(d.failPhone) + '</a>' +
+      '<button class="again" type="button">' + esc(d.retry) + '</button>' +
+    '</div>';
+
+  block('form').querySelector('.again').addEventListener('click', function () {
+    renderForm();
+    setupForm();
+  });
+}
+
+
+/* ---------------------------------------------------------------------------
    НИЗ СТРАНИЦЫ И КНОПКА
    --------------------------------------------------------------------------- */
 
@@ -342,8 +485,10 @@ renderCourses();
 renderSchedule();
 renderPrices();
 renderContacts();
+renderForm();
 renderFooter();
 renderCta();
 setupAccordion();
+setupForm();
 setupHaptics();
 setupTelegram();
