@@ -247,17 +247,13 @@ footer{padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
   display:block;font-size:12px;font-weight:600;color:var(--muted);
   margin-bottom:5px;padding-left:2px;
 }
-.fld input,.fld select{
+.fld input,.pick-head{
   width:100%;background:#fff;border:1px solid var(--line);border-radius:14px;
   padding:14px 15px;font-family:'Golos Text',system-ui,sans-serif;font-size:15px;
   color:var(--ink);appearance:none;-webkit-appearance:none;
 }
 .fld input::placeholder{color:#70776B}
-.fld input:focus,.fld select:focus{outline:2px solid var(--moss);outline-offset:-1px}
-.fld select{
-  background-image:url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234F754B' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 16px center;padding-right:38px;
-}
+.fld input:focus,.pick-head:focus-visible{outline:2px solid var(--moss);outline-offset:-1px}
 .fld.bad input{border-color:#A8452F}
 .fld .err{display:block;font-size:12px;color:#A8452F;margin-top:5px;padding-left:2px}
 
@@ -372,3 +368,40 @@ footer a{color:var(--moss);text-decoration:none;font-weight:600}
   transition:transform .15s ease;
 }
 .endbar .cta:active{transform:scale(.985)}
+
+/* ============================================================
+   ВЫБОР КУРСА — СВОЙ РАСКРЫВАЮЩИЙСЯ СПИСОК
+
+   Системный <select> на телефоне открывается модальным окном
+   поверх приложения, и оформить его нельзя. Здесь тот же приём,
+   что у раскрывающихся курсов: высота плавно растёт от нуля.
+   ============================================================ */
+
+.pick{position:relative}
+.pick-head{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  cursor:pointer;text-align:left;color:var(--ink);
+}
+.pick-arrow{flex-shrink:0;color:var(--moss);transition:transform .22s ease}
+.pick.open .pick-arrow{transform:rotate(180deg)}
+
+/* Раскрытый список примыкает к полю: общая рамка, скругления только снизу */
+.pick.open .pick-head{
+  border-color:var(--moss);border-bottom-color:var(--line);
+  border-bottom-left-radius:0;border-bottom-right-radius:0;
+}
+.pick-body{max-height:0;overflow:hidden;transition:max-height .28s ease}
+.pick.open .pick-body{max-height:320px}
+.pick-in{
+  background:#fff;border:1px solid var(--moss);border-top:0;
+  border-radius:0 0 14px 14px;overflow:hidden;
+}
+.pick-opt{
+  display:block;width:100%;border:0;border-top:1px solid var(--line);
+  background:none;cursor:pointer;text-align:left;
+  font-family:'Golos Text',system-ui,sans-serif;font-size:15px;color:var(--ink);
+  padding:13px 15px;
+}
+.pick-opt:first-child{border-top:0}
+.pick-opt.on{background:var(--pist-3);font-weight:600}
+.pick-opt.on::after{content:"✓";float:right;color:var(--moss);font-weight:700}

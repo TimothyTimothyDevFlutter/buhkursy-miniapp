@@ -81,7 +81,9 @@ function esc(text) {
   return String(text)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // Расставляет пробелы в разрядах: 100000 превращается в «100 000»
@@ -291,9 +293,29 @@ function renderForm() {
   var host = block('form');
   if (!DATA.settings.formUrl) { host.hidden = true; return; }
 
-  var options = d.courseOptions.map(function (c) {
-    return '<option value="' + esc(c) + '">' + esc(c) + '</option>';
+  // Свой раскрывающийся список вместо <select>.
+  // Системный список рисует не страница, а операционная система, и на телефоне
+  // он открывается модальным окном поверх приложения. Оформить его нельзя.
+  // Здесь та же механика, что у раскрывающихся курсов выше по странице.
+  var chosen = d.courseOptions[0];
+
+  var options = d.courseOptions.map(function (c, i) {
+    return '<button class="pick-opt' + (i === 0 ? ' on' : '') + '" type="button" ' +
+           'data-value="' + esc(c) + '">' + esc(c) + '</button>';
   }).join('');
+
+  var arrow = '<svg class="pick-arrow" width="12" height="8" viewBox="0 0 12 8" aria-hidden="true">' +
+              '<path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+
+  var picker =
+    '<div class="fld pick">' +
+      '<span>' + esc(d.courseLabel) + '</span>' +
+      '<input type="hidden" name="course" value="' + esc(chosen) + '">' +
+      '<button class="pick-head" type="button" aria-expanded="false">' +
+        '<span class="pick-val">' + esc(chosen) + '</span>' + arrow +
+      '</button>' +
+      '<div class="pick-body"><div class="pick-in">' + options + '</div></div>' +
+    '</div>';
 
   host.hidden = false;
   host.innerHTML =
@@ -309,15 +331,72 @@ function renderForm() {
         '<span>' + esc(d.phoneLabel) + '</span>' +
         '<input name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="' + esc(d.phonePlaceholder) + '">' +
       '</label>' +
-      '<label class="fld">' +
-        '<span>' + esc(d.courseLabel) + '</span>' +
-        '<select name="course">' + options + '</select>' +
-      '</label>' +
+      picker +
       // Поле-ловушка: человек его не видит, робот заполняет и выдаёт себя
       '<input class="hp" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">' +
       '<button class="send" type="submit">' + esc(d.button) + '</button>' +
     '</form>';
 }
+
+/* ---------------------------------------------------------------------------
+   РАСКРЫВАЮЩИЙСЯ ВЫБОР КУРСА
+
+   Заменяет системный список. Выбранное значение хранится в скрытом поле
+   с именем course — поэтому отправка формы работает ровно так же,
+   как работала с <select>, менять там ничего не пришлось.
+   --------------------------------------------------------------------------- */
+
+function openPick(pick) {
+  pick.classList.add('open');
+  pick.querySelector('.pick-head').setAttribute('aria-expanded', 'true');
+}
+
+function closePick(pick) {
+  pick.classList.remove('open');
+  pick.querySelector('.pick-head').setAttribute('aria-expanded', 'false');
+}
+
+function setupPicker() {
+  var pick = document.querySelector('.pick');
+  if (!pick) return;
+
+  pick.querySelector('.pick-head').addEventListener('click', function () {
+    haptic('light');
+    if (pick.classList.contains('open')) closePick(pick); else openPick(pick);
+  });
+
+  pick.querySelectorAll('.pick-opt').forEach(function (option) {
+    option.addEventListener('click', function () {
+      var value = option.getAttribute('data-value');
+
+      pick.querySelector('input[name="course"]').value = value;
+      pick.querySelector('.pick-val').textContent = value;
+
+      pick.querySelectorAll('.pick-opt').forEach(function (o) { o.classList.remove('on'); });
+      option.classList.add('on');
+
+      haptic('light');
+      closePick(pick);
+    });
+  });
+}
+
+// Закрытие по нажатию мимо списка и по клавише Esc.
+// Вешается один раз при запуске: список каждый раз ищется заново,
+// поэтому перерисовка страницы при смене языка ничего не ломает.
+function setupPickerClosing() {
+  document.addEventListener('click', function (event) {
+    var open = document.querySelector('.pick.open');
+    if (open && !open.contains(event.target)) closePick(open);
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key !== 'Escape') return;
+    var open = document.querySelector('.pick.open');
+    if (open) closePick(open);
+  });
+}
+
 
 // Показывает подсказку под незаполненным полем
 function markBad(form, fieldName, message) {
@@ -611,6 +690,7 @@ function renderAll() {
   setupLangSwitch();
   setupAccordion();
   setupForm();
+  setupPicker();
   setupFormLinks();
   setupFooterLink();
   setupHaptics();
@@ -619,4 +699,5 @@ function renderAll() {
 LANG = pickLang();
 document.documentElement.lang = DATA[LANG].htmlLang;
 renderAll();
+setupPickerClosing();
 setupTelegram();
