@@ -253,7 +253,7 @@ footer{padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
   color:var(--ink);appearance:none;-webkit-appearance:none;
 }
 .fld input::placeholder{color:#70776B}
-.fld input:focus,.pick-head:focus-visible{outline:2px solid var(--moss);outline-offset:-1px}
+.fld input:focus,.pick-head:focus{outline:2px solid var(--moss);outline-offset:-1px}
 .fld.bad input{border-color:#A8452F}
 .fld .err{display:block;font-size:12px;color:#A8452F;margin-top:5px;padding-left:2px}
 
@@ -405,3 +405,35 @@ footer a{color:var(--moss);text-decoration:none;font-weight:600}
 .pick-opt:first-child{border-top:0}
 .pick-opt.on{background:var(--pist-3);font-weight:600}
 .pick-opt.on::after{content:"✓";float:right;color:var(--moss);font-weight:700}
+
+/* ============================================================
+   ЕДИНЫЙ ОТКЛИК НА НАЖАТИЕ
+
+   По умолчанию подсветку нажатия рисует не страница, а система:
+   на Android это серый прямоугольник, который не знает ни наших
+   цветов, ни скруглений. Отключаем его и задаём свой отклик —
+   одинаковый для всех нажимаемых элементов.
+   ============================================================ */
+
+button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}
+
+/* Строка курса и пункт списка: подсветка фоном из палитры */
+.row:active{background:var(--pist-3)}
+.pick-opt:active{background:var(--pist-2)}
+
+/* Поле выбора: тот же фон, что у строки курса */
+.pick-head:active{background:var(--pist-3)}
+
+/* Переключатель языка на тёмном фоне: подсветка светлее фона */
+.lg:active{background:rgba(207,227,168,.28)}
+
+/* Ссылки и текстовые кнопки: приглушение вместо заливки —
+   заливка на строке телефона выглядела бы полосой во всю ширину */
+.tel:active,.golink:active,.res.no .again:active,footer a:active{opacity:.55}
+
+/* Кнопки-плашки уже уменьшаются при нажатии, добавляем недостающим */
+.res.no .call:active{transform:scale(.985)}
+
+/* Открытый список сам обозначает фокус рамкой и раскрытием —
+   вторая рамка поверх него провела бы лишнюю черту между полем и списком */
+.pick.open .pick-head:focus{outline:none}
